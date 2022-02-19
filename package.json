@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "@zondax/ledger-substrate": "^0.24.0"
+  }
+}
