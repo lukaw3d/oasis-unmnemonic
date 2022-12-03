@@ -23,11 +23,11 @@
       <li>reconnect</li>
     </ol>
 
-    <form id="form">
+    <form id="form" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
       <label>
         Enter mnemonic:
         <br>
-        <textarea id="mnemonic" rows="3" cols="150">test test test test test test test test test test test test test test test test test test test test test test fun test</textarea>
+        <textarea id="mnemonic" rows="3" cols="150" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">test test test test test test test test test test test test test test test test test test test test test test fun test</textarea>
       </label>
       <br>
       <input type="submit">
@@ -7736,8 +7736,8 @@ module.exports = function(iterations, keylen) {
 };
 
 },{}],"lyDqi":[function(require,module,exports) {
-var global = arguments[3];
 var process = require("process");
+var global = arguments[3];
 var defaultEncoding;
 /* istanbul ignore next */ if (global.process && global.process.browser) defaultEncoding = 'utf-8';
 else if (global.process && global.process.version) {
