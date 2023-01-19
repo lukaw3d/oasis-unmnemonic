@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'sha256-GAeubexcRPiqWktQ+0uQrOd8SX4a0NUoFXHL3BCxfHo='; style-src 'sha256-maWESYSmK8qXeUqmlwu/2s+/3vbwgQEcs5QtZhemXd0=';">
+      content="default-src 'none'; script-src 'sha256-hGGiZbuQH4QvLq3JeyRh0E4NqXKUEQULOKKKTt60s7o='; style-src 'sha256-maWESYSmK8qXeUqmlwu/2s+/3vbwgQEcs5QtZhemXd0=';">
     <style>
       body { font-family: sans-serif; }
       textarea { max-width: 100%; }
@@ -49,6 +49,36 @@
     <pre id="out">--</pre>
 
     <hr>
+
+    <form
+      id="privateKeysForm"
+      autocomplete="off"
+      autocapitalize="off"
+      autocorrect="off"
+      spellcheck="false"
+    >
+      <label>
+        Enter private keys to get addresses:
+        <br>
+        <textarea
+          id="privateKeys"
+          rows="10"
+          cols="150"
+          autocomplete="off"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+        >
+9Q009LUoTZWNCVjXpapEs+Vchn5Cbhv+urgYMeT5l2ItT6CV1dbPpxV0RKobuIL8cTEZeImpvMrgBfeSXA+/ow==
+JuoeOORkfG7JIfQAsXTH9khZw6BMC5zQqeCHzQDR7a98znvkyGY099776uBMqngu6jNPRKDxfSsSTu2LMk2pig==
+        </textarea>
+      </label>
+      <br>
+      <input type="submit">
+    </form>
+    <pre id="privateKeysOut">--</pre>
+
+    <hr>
     <p>
       <a href="https://github.com/lukaw3d/unmnemonic">Source code</a>
     </p>
@@ -56,24 +86,39 @@
     <script type="module">
       const { getLedgerPrivateKeys } = require('./getLedgerPrivateKeys.js')
       const { getAdr8PrivateKeys } = require('./getAdr8PrivateKeys.js')
-      window.form.addEventListener('submit', event => {
+      const { getAddress } = require('./getAddress.js')
+      window.form.addEventListener('submit', async event => {
+        event.preventDefault()
         try {
-          event.preventDefault()
           const mnemonic = window.mnemonic.value
             .trim()
             .replace(/\n/g, ' ')
             .replace(/ +/g, ' ')
 
-          getAdr8PrivateKeys(mnemonic).then((adr8PrivateKeys) => {
-            const ledgerPrivateKeys = getLedgerPrivateKeys(mnemonic)
-            window.out.textContent =
-              `Private keys using ADR 0008 derivation:\n${adr8PrivateKeys.join('\n')}\n\n` +
-              `Private keys using Ledger derivation:\n${ledgerPrivateKeys.join('\n')}\n\n`
-          }).catch((err) => {
-            window.out.textContent = err
-          })
+          const adr8PrivateKeys = await getAdr8PrivateKeys(mnemonic)
+          const ledgerPrivateKeys = getLedgerPrivateKeys(mnemonic)
+
+          const adr8Addresses = await Promise.all(adr8PrivateKeys.map(k => getAddress(k)))
+          const ledgerAddresses = await Promise.all(ledgerPrivateKeys.map(k => getAddress(k)))
+
+          window.out.textContent =
+            `Private keys using ADR 0008 derivation:\n${adr8PrivateKeys.join('\n')}\n\n` +
+            `${adr8Addresses.join('\n')}\n\n\n` +
+            `Private keys using Ledger derivation:\n${ledgerPrivateKeys.join('\n')}\n\n` +
+            `${ledgerAddresses.join('\n')}\n\n`
         } catch (err) {
           window.out.textContent = err
+        }
+      })
+
+      window.privateKeysForm.addEventListener('submit', async event => {
+        event.preventDefault()
+        try {
+          const privateKeys = window.privateKeys.value.replace(/ /g, '').split('\n').filter(a => a)
+          const addresses = await Promise.all(privateKeys.map(k => getAddress(k)))
+          window.privateKeysOut.textContent = addresses.join('\n')
+        } catch (err) {
+          window.privateKeysOut.textContent = err
         }
       })
     </script>

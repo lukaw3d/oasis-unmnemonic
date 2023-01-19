@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-GAeubexcRPiqWktQ+0uQrOd8SX4a0NUoFXHL3BCxfHo='; style-src 'sha256-maWESYSmK8qXeUqmlwu/2s+/3vbwgQEcs5QtZhemXd0=';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hGGiZbuQH4QvLq3JeyRh0E4NqXKUEQULOKKKTt60s7o='; style-src 'sha256-maWESYSmK8qXeUqmlwu/2s+/3vbwgQEcs5QtZhemXd0=';">
     <style>
       body { font-family: sans-serif; }
       textarea { max-width: 100%; }
@@ -33,6 +33,22 @@
       <input type="submit">
     </form>
     <pre id="out">--</pre>
+
+    <hr>
+
+    <form id="privateKeysForm" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <label>
+        Enter private keys to get addresses:
+        <br>
+        <textarea id="privateKeys" rows="10" cols="150" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+9Q009LUoTZWNCVjXpapEs+Vchn5Cbhv+urgYMeT5l2ItT6CV1dbPpxV0RKobuIL8cTEZeImpvMrgBfeSXA+/ow==
+JuoeOORkfG7JIfQAsXTH9khZw6BMC5zQqeCHzQDR7a98znvkyGY099776uBMqngu6jNPRKDxfSsSTu2LMk2pig==
+        </textarea>
+      </label>
+      <br>
+      <input type="submit">
+    </form>
+    <pre id="privateKeysOut">--</pre>
 
     <hr>
     <p>
@@ -183,25 +199,39 @@
       this[globalName] = mainExports;
     }
   }
-})({"ja03O":[function(require,module,exports) {
+})({"9Cyuk":[function(require,module,exports) {
 const { getLedgerPrivateKeys  } = require('./getLedgerPrivateKeys.js');
 const { getAdr8PrivateKeys  } = require('./getAdr8PrivateKeys.js');
-window.form.addEventListener('submit', (event)=>{
+const { getAddress  } = require('./getAddress.js');
+window.form.addEventListener('submit', async (event)=>{
+    event.preventDefault();
     try {
-        event.preventDefault();
         const mnemonic = window.mnemonic.value.trim().replace(/\n/g, ' ').replace(/ +/g, ' ');
-        getAdr8PrivateKeys(mnemonic).then((adr8PrivateKeys)=>{
-            const ledgerPrivateKeys = getLedgerPrivateKeys(mnemonic);
-            window.out.textContent = `Private keys using ADR 0008 derivation:\n${adr8PrivateKeys.join('\n')}\n\n` + `Private keys using Ledger derivation:\n${ledgerPrivateKeys.join('\n')}\n\n`;
-        }).catch((err)=>{
-            window.out.textContent = err;
-        });
+        const adr8PrivateKeys = await getAdr8PrivateKeys(mnemonic);
+        const ledgerPrivateKeys = getLedgerPrivateKeys(mnemonic);
+        const adr8Addresses = await Promise.all(adr8PrivateKeys.map((k)=>getAddress(k)
+        ));
+        const ledgerAddresses = await Promise.all(ledgerPrivateKeys.map((k)=>getAddress(k)
+        ));
+        window.out.textContent = `Private keys using ADR 0008 derivation:\n${adr8PrivateKeys.join('\n')}\n\n` + `${adr8Addresses.join('\n')}\n\n\n` + `Private keys using Ledger derivation:\n${ledgerPrivateKeys.join('\n')}\n\n` + `${ledgerAddresses.join('\n')}\n\n`;
     } catch (err) {
         window.out.textContent = err;
     }
 });
+window.privateKeysForm.addEventListener('submit', async (event)=>{
+    event.preventDefault();
+    try {
+        const privateKeys = window.privateKeys.value.replace(/ /g, '').split('\n').filter((a)=>a
+        );
+        const addresses = await Promise.all(privateKeys.map((k)=>getAddress(k)
+        ));
+        window.privateKeysOut.textContent = addresses.join('\n');
+    } catch (err) {
+        window.privateKeysOut.textContent = err;
+    }
+});
 
-},{"./getLedgerPrivateKeys.js":"eW8f6","./getAdr8PrivateKeys.js":"5nYCq"}],"eW8f6":[function(require,module,exports) {
+},{"./getLedgerPrivateKeys.js":"eW8f6","./getAdr8PrivateKeys.js":"5nYCq","./getAddress.js":"8eWXs"}],"eW8f6":[function(require,module,exports) {
 // @ts-check
 const { hdKeyDerivation  } = require('@zondax/ledger-substrate/src/index');
 function getLedgerPrivateKeys(mnemonic) {
@@ -7738,8 +7768,8 @@ module.exports = function(iterations, keylen) {
 };
 
 },{}],"lyDqi":[function(require,module,exports) {
-var global = arguments[3];
 var process = require("process");
+var global = arguments[3];
 var defaultEncoding;
 /* istanbul ignore next */ if (global.process && global.process.browser) defaultEncoding = 'utf-8';
 else if (global.process && global.process.version) {
@@ -7852,8 +7882,8 @@ module.exports = function(thing, encoding, name) {
 
 },{"safe-buffer":"4WLFd"}],"5dXXm":[function(require,module,exports) {
 'use strict';
-var global = arguments[3];
 var process = require("process");
+var global = arguments[3];
 // limit of Crypto.getRandomValues()
 // https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues
 var MAX_BYTES = 65536;
@@ -19584,7 +19614,7 @@ module.exports = {
     getAdr8PrivateKeys
 };
 
-},{"buffer":"6tQNr","@oasisprotocol/client/dist/hdkey":"7Tn6y"}],"7Tn6y":[function(require,module,exports) {
+},{"@oasisprotocol/client/dist/hdkey":"7Tn6y","buffer":"6tQNr"}],"7Tn6y":[function(require,module,exports) {
 "use strict";
 Object.defineProperty(exports, "__esModule", {
     value: true
@@ -19663,8 +19693,8 @@ const pathRegex = new RegExp("^m(\\/[0-9]+')+$");
 exports.HDKey = HDKey;
 
 },{"js-sha512":"33W8e","tweetnacl":"eaLKT","bip39":"ciVqc","./misc":"ewPiH"}],"33W8e":[function(require,module,exports) {
-var process = require("process");
 var global = arguments[3];
+var process = require("process");
 /*
  * [js-sha512]{@link https://github.com/emn178/js-sha512}
  *
@@ -24491,7 +24521,742 @@ exports.Tokeniser = Tokeniser;
 exports.decode = decode;
 exports.tokensToObject = tokensToObject;
 
-},{"./common.js":"bkJnN","./token.js":"g3UMf","./jump.js":"2bdAj"}]},["ja03O"], "ja03O", "parcelRequire94c2")
+},{"./common.js":"bkJnN","./token.js":"g3UMf","./jump.js":"2bdAj"}],"8eWXs":[function(require,module,exports) {
+// @ts-check
+const staking = require('@oasisprotocol/client/dist/staking');
+const { Buffer  } = require('buffer');
+const nacl = require('tweetnacl');
+async function getAddress(privateKeyBase64) {
+    const privateKey = Buffer.from(privateKeyBase64, 'base64');
+    if (privateKey.length !== 32 && privateKey.length !== 64) throw new Error('Bad private key');
+    const publicKey = privateKey.length === 32 ? nacl.sign.keyPair.fromSeed(privateKey).publicKey : nacl.sign.keyPair.fromSecretKey(privateKey).publicKey;
+    return staking.addressToBech32(await staking.addressFromPublicKey(publicKey));
+}
+module.exports = {
+    getAddress
+};
+
+},{"@oasisprotocol/client/dist/staking":"6r59h","buffer":"6tQNr","tweetnacl":"eaLKT"}],"6r59h":[function(require,module,exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.addressFromRuntimeID = exports.addressFromPublicKey = exports.TOKEN_ERR_INVALID_TOKEN_VALUE_EXPONENT_CODE = exports.TOKEN_MODULE_NAME = exports.ERR_BALANCE_TOO_LOW_CODE = exports.ERR_UNDER_MIN_TRANSFER_AMOUNT_CODE = exports.ERR_UNDER_MIN_DELEGATION_AMOUNT_CODE = exports.ERR_TOO_MANY_ALLOWANCES_CODE = exports.ERR_INVALID_THRESHOLD_CODE = exports.ERR_FORBIDDEN_CODE = exports.ERR_INSUFFICIENT_STAKE_CODE = exports.ERR_INSUFFICIENT_BALANCE_CODE = exports.ERR_INVALID_SIGNATURE_CODE = exports.ERR_INVALID_ARGUMENT_CODE = exports.MODULE_NAME = exports.GAS_OP_WITHDRAW = exports.GAS_OP_ALLOW = exports.GAS_OP_AMEND_COMMISSION_SCHEDULE = exports.GAS_OP_RECLAIM_ESCROW = exports.GAS_OP_ADD_ESCROW = exports.GAS_OP_BURN = exports.GAS_OP_TRANSFER = exports.SLASH_RUNTIME_LIVENESS = exports.SLASH_RUNTIME_EQUIVOCATION = exports.SLASH_RUNTIME_INCORRECT_RESULTS = exports.SLASH_CONSENSUS_LIGHT_CLIENT_ATTACK = exports.SLASH_BEACON_NONPARTICIPATION = exports.SLASH_BEACON_INVALID_REVEAL = exports.SLASH_BEACON_INVALID_COMMIT = exports.SLASH_CONSENSUS_EQUIVOCATION = exports.KIND_MAX = exports.KIND_RUNTIME_KEY_MANAGER = exports.KIND_RUNTIME_COMPUTE = exports.KIND_NODE_KEY_MANAGER = exports.KIND_NODE_STORAGE = exports.KIND_NODE_COMPUTE = exports.KIND_NODE_VALIDATOR = exports.KIND_ENTITY = exports.METHOD_WITHDRAW = exports.METHOD_ALLOW = exports.METHOD_AMEND_COMMISSION_SCHEDULE = exports.METHOD_RECLAIM_ESCROW = exports.METHOD_ADD_ESCROW = exports.METHOD_BURN = exports.METHOD_TRANSFER = exports.ADDRESS_PREFIX = exports.ADDRESS_RUNTIME_V0_CONTEXT_VERSION = exports.ADDRESS_RUNTIME_V0_CONTEXT_IDENTIFIER = exports.ADDRESS_V0_CONTEXT_VERSION = exports.ADDRESS_V0_CONTEXT_IDENTIFIER = void 0;
+exports.withdrawWrapper = exports.allowWrapper = exports.amendCommissionScheduleWrapper = exports.reclaimEscrowWrapper = exports.addEscrowWrapper = exports.burnWrapper = exports.transferWrapper = exports.governanceDepositsAddress = exports.feeAccumulatorAddress = exports.commonPoolAddress = exports.addressFromBech32 = exports.addressToBech32 = void 0;
+const address = require("./address");
+const consensus = require("./consensus");
+const misc = require("./misc");
+/**
+ * AddressV0Context is the unique context for v0 staking account addresses.
+ */ exports.ADDRESS_V0_CONTEXT_IDENTIFIER = 'oasis-core/address: staking';
+/**
+ * AddressV0Context is the unique context for v0 staking account addresses.
+ */ exports.ADDRESS_V0_CONTEXT_VERSION = 0;
+/**
+ * AddressRuntimeV0Context is the unique context for v0 runtime account addresses.
+ */ exports.ADDRESS_RUNTIME_V0_CONTEXT_IDENTIFIER = 'oasis-core/address: runtime';
+/**
+ * AddressRuntimeV0Context is the unique context for v0 runtime account addresses.
+ */ exports.ADDRESS_RUNTIME_V0_CONTEXT_VERSION = 0;
+/**
+ * AddressBech32HRP is the unique human readable part of Bech32 encoded
+ * staking account addresses.
+ */ exports.ADDRESS_PREFIX = 'oasis';
+/**
+ * MethodTransfer is the method name for transfers.
+ */ exports.METHOD_TRANSFER = 'staking.Transfer';
+/**
+ * MethodBurn is the method name for burns.
+ */ exports.METHOD_BURN = 'staking.Burn';
+/**
+ * MethodAddEscrow is the method name for escrows.
+ */ exports.METHOD_ADD_ESCROW = 'staking.AddEscrow';
+/**
+ * MethodReclaimEscrow is the method name for escrow reclamations.
+ */ exports.METHOD_RECLAIM_ESCROW = 'staking.ReclaimEscrow';
+/**
+ * MethodAmendCommissionSchedule is the method name for amending commission schedules.
+ */ exports.METHOD_AMEND_COMMISSION_SCHEDULE = 'staking.AmendCommissionSchedule';
+/**
+ * MethodAllow is the method name for setting a beneficiary allowance.
+ */ exports.METHOD_ALLOW = 'staking.Allow';
+/**
+ * MethodWithdraw is the method name for
+ */ exports.METHOD_WITHDRAW = 'staking.Withdraw';
+exports.KIND_ENTITY = 0;
+exports.KIND_NODE_VALIDATOR = 1;
+exports.KIND_NODE_COMPUTE = 2;
+exports.KIND_NODE_STORAGE = 3;
+exports.KIND_NODE_KEY_MANAGER = 4;
+exports.KIND_RUNTIME_COMPUTE = 5;
+exports.KIND_RUNTIME_KEY_MANAGER = 6;
+exports.KIND_MAX = exports.KIND_RUNTIME_KEY_MANAGER;
+/**
+ * SlashConsensusEquivocation is slashing due to equivocation.
+ */ exports.SLASH_CONSENSUS_EQUIVOCATION = 0;
+/**
+ * SlashBeaconInvalidCommit is slashing due to invalid commit behavior.
+ */ exports.SLASH_BEACON_INVALID_COMMIT = 1;
+/**
+ * SlashBeaconInvalidReveal is slashing due to invalid reveal behavior.
+ */ exports.SLASH_BEACON_INVALID_REVEAL = 2;
+/**
+ * SlashBeaconNonparticipation is slashing due to nonparticipation.
+ */ exports.SLASH_BEACON_NONPARTICIPATION = 3;
+/**
+ * SlashConsensusLightClientAttack is slashing due to light client attacks.
+ */ exports.SLASH_CONSENSUS_LIGHT_CLIENT_ATTACK = 4;
+/**
+ * SlashRuntimeIncorrectResults is slashing due to submission of incorrect
+ * results in runtime executor commitments.
+ */ exports.SLASH_RUNTIME_INCORRECT_RESULTS = 128;
+/**
+ * SlashRuntimeEquivocation is slashing due to signing two different
+ * executor commits or proposed batches for the same round.
+ */ exports.SLASH_RUNTIME_EQUIVOCATION = 129;
+/**
+ * SlashRuntimeLiveness is slashing due to not doing the required work.
+ */ exports.SLASH_RUNTIME_LIVENESS = 130;
+/**
+ * GasOpTransfer is the gas operation identifier for transfer.
+ */ exports.GAS_OP_TRANSFER = 'transfer';
+/**
+ * GasOpBurn is the gas operation identifier for burn.
+ */ exports.GAS_OP_BURN = 'burn';
+/**
+ * GasOpAddEscrow is the gas operation identifier for add escrow.
+ */ exports.GAS_OP_ADD_ESCROW = 'add_escrow';
+/**
+ * GasOpReclaimEscrow is the gas operation identifier for reclaim escrow.
+ */ exports.GAS_OP_RECLAIM_ESCROW = 'reclaim_escrow';
+/**
+ * GasOpAmendCommissionSchedule is the gas operation identifier for amend commission schedule.
+ */ exports.GAS_OP_AMEND_COMMISSION_SCHEDULE = 'amend_commission_schedule';
+/**
+ * GasOpAllow is the gas operation identifier for allow.
+ */ exports.GAS_OP_ALLOW = 'allow';
+/**
+ * GasOpWithdraw is the gas operation identifier for withdraw.
+ */ exports.GAS_OP_WITHDRAW = 'withdraw';
+/**
+ * ModuleName is a unique module name for the staking module.
+ */ exports.MODULE_NAME = 'staking';
+/**
+ * ErrInvalidArgument is the error returned on malformed arguments.
+ */ exports.ERR_INVALID_ARGUMENT_CODE = 1;
+/**
+ * ErrInvalidSignature is the error returned on invalid signature.
+ */ exports.ERR_INVALID_SIGNATURE_CODE = 2;
+/**
+ * ErrInsufficientBalance is the error returned when an operation
+ * fails due to insufficient balance.
+ */ exports.ERR_INSUFFICIENT_BALANCE_CODE = 3;
+/**
+ * ErrInsufficientStake is the error returned when an operation fails
+ * due to insufficient stake.
+ */ exports.ERR_INSUFFICIENT_STAKE_CODE = 4;
+/**
+ * ErrForbidden is the error returned when an operation is forbidden by
+ * policy.
+ */ exports.ERR_FORBIDDEN_CODE = 5;
+/**
+ * ErrInvalidThreshold is the error returned when an invalid threshold kind
+ * is specified in a query.
+ */ exports.ERR_INVALID_THRESHOLD_CODE = 6;
+/**
+ * ErrTooManyAllowances is the error returned when the number of allowances per account would
+ * exceed the maximum allowed number.
+ */ exports.ERR_TOO_MANY_ALLOWANCES_CODE = 7;
+/**
+ * ErrUnderMinDelegationAmount is the error returned when the given escrow
+ * amount is lower than the minimum delegation amount specified in the
+ * consensus parameters.
+ */ exports.ERR_UNDER_MIN_DELEGATION_AMOUNT_CODE = 8;
+/**
+ * ErrUnderMinTransferAmount is the error returned when the given transfer
+ * or burn or withdrawal amount is lower than the minimum transfer amount
+ * specified in the consensus parameters.
+ */ exports.ERR_UNDER_MIN_TRANSFER_AMOUNT_CODE = 9;
+/**
+ * ErrBalanceTooLow is the error returned when an account's balance is
+ * below the minimum allowed amount.
+ */ exports.ERR_BALANCE_TOO_LOW_CODE = 10;
+/**
+ * ModuleName is a unique module name for the staking/token module.
+ */ exports.TOKEN_MODULE_NAME = 'staking/token';
+/**
+ * ErrInvalidTokenValueExponent is the error returned when an invalid token's
+ * value base-10 exponent is specified.
+ */ exports.TOKEN_ERR_INVALID_TOKEN_VALUE_EXPONENT_CODE = 1;
+async function addressFromPublicKey(pk) {
+    return await address.fromData(exports.ADDRESS_V0_CONTEXT_IDENTIFIER, exports.ADDRESS_V0_CONTEXT_VERSION, pk);
+}
+exports.addressFromPublicKey = addressFromPublicKey;
+async function addressFromRuntimeID(id) {
+    return await address.fromData(exports.ADDRESS_RUNTIME_V0_CONTEXT_IDENTIFIER, exports.ADDRESS_RUNTIME_V0_CONTEXT_VERSION, id);
+}
+exports.addressFromRuntimeID = addressFromRuntimeID;
+function addressToBech32(addr) {
+    return address.toBech32(exports.ADDRESS_PREFIX, addr);
+}
+exports.addressToBech32 = addressToBech32;
+function addressFromBech32(str) {
+    return address.fromBech32(exports.ADDRESS_PREFIX, str);
+}
+exports.addressFromBech32 = addressFromBech32;
+/**
+ * CommonPoolAddress is the common pool address.
+ * The address is reserved to prevent it being accidentally used in the actual ledger.
+ */ async function commonPoolAddress() {
+    return await addressFromPublicKey(misc.fromHex('1abe11edc001ffffffffffffffffffffffffffffffffffffffffffffffffffff'));
+}
+exports.commonPoolAddress = commonPoolAddress;
+/**
+ * FeeAccumulatorAddress is the per-block fee accumulator address.
+ * It holds all fees from txs in a block which are later disbursed to validators appropriately.
+ * The address is reserved to prevent it being accidentally used in the actual ledger.
+ */ async function feeAccumulatorAddress() {
+    return await addressFromPublicKey(misc.fromHex('1abe11edfeeaccffffffffffffffffffffffffffffffffffffffffffffffffff'));
+}
+exports.feeAccumulatorAddress = feeAccumulatorAddress;
+/**
+ * GovernanceDepositsAddress is the governance deposits address.
+ * This address is reserved to prevent it from being accidentally used in the actual ledger.
+ */ async function governanceDepositsAddress() {
+    return await addressFromPublicKey(misc.fromHex('1abe11eddeaccfffffffffffffffffffffffffffffffffffffffffffffffffff'));
+}
+exports.governanceDepositsAddress = governanceDepositsAddress;
+function transferWrapper() {
+    return new consensus.TransactionWrapper(exports.METHOD_TRANSFER);
+}
+exports.transferWrapper = transferWrapper;
+function burnWrapper() {
+    return new consensus.TransactionWrapper(exports.METHOD_BURN);
+}
+exports.burnWrapper = burnWrapper;
+function addEscrowWrapper() {
+    return new consensus.TransactionWrapper(exports.METHOD_ADD_ESCROW);
+}
+exports.addEscrowWrapper = addEscrowWrapper;
+function reclaimEscrowWrapper() {
+    return new consensus.TransactionWrapper(exports.METHOD_RECLAIM_ESCROW);
+}
+exports.reclaimEscrowWrapper = reclaimEscrowWrapper;
+function amendCommissionScheduleWrapper() {
+    return new consensus.TransactionWrapper(exports.METHOD_AMEND_COMMISSION_SCHEDULE);
+}
+exports.amendCommissionScheduleWrapper = amendCommissionScheduleWrapper;
+function allowWrapper() {
+    return new consensus.TransactionWrapper(exports.METHOD_ALLOW);
+}
+exports.allowWrapper = allowWrapper;
+function withdrawWrapper() {
+    return new consensus.TransactionWrapper(exports.METHOD_WITHDRAW);
+}
+exports.withdrawWrapper = withdrawWrapper;
+
+},{"./address":"18t0g","./consensus":"hWy4v","./misc":"ewPiH"}],"18t0g":[function(require,module,exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.fromBech32 = exports.toBech32 = exports.fromData = void 0;
+const bech32_1 = require("bech32");
+const hash = require("./hash");
+const misc = require("./misc");
+async function fromData(contextIdentifier, contextVersion, data) {
+    const versionU8 = new Uint8Array([
+        contextVersion
+    ]);
+    return misc.concat(versionU8, (await hash.hash(misc.concat(misc.fromString(contextIdentifier), versionU8, data))).slice(0, 20));
+}
+exports.fromData = fromData;
+function toBech32(prefix, addr) {
+    return bech32_1.bech32.encode(prefix, bech32_1.bech32.toWords(addr));
+}
+exports.toBech32 = toBech32;
+function fromBech32(expectedPrefix, str) {
+    const { prefix , words  } = bech32_1.bech32.decode(str);
+    if (prefix !== expectedPrefix) throw new Error(`wrong prefix: ${prefix}, expected ${expectedPrefix}`);
+    return new Uint8Array(bech32_1.bech32.fromWords(words));
+}
+exports.fromBech32 = fromBech32;
+
+},{"bech32":"6yrMR","./hash":"dlxf7","./misc":"ewPiH"}],"6yrMR":[function(require,module,exports) {
+'use strict';
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.bech32m = exports.bech32 = void 0;
+const ALPHABET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+const ALPHABET_MAP = {
+};
+for(let z = 0; z < ALPHABET.length; z++){
+    const x = ALPHABET.charAt(z);
+    ALPHABET_MAP[x] = z;
+}
+function polymodStep(pre) {
+    const b = pre >> 25;
+    return (pre & 33554431) << 5 ^ -(b >> 0 & 1) & 996825010 ^ -(b >> 1 & 1) & 642813549 ^ -(b >> 2 & 1) & 513874426 ^ -(b >> 3 & 1) & 1027748829 ^ -(b >> 4 & 1) & 705979059;
+}
+function prefixChk(prefix) {
+    let chk = 1;
+    for(let i = 0; i < prefix.length; ++i){
+        const c = prefix.charCodeAt(i);
+        if (c < 33 || c > 126) return 'Invalid prefix (' + prefix + ')';
+        chk = polymodStep(chk) ^ c >> 5;
+    }
+    chk = polymodStep(chk);
+    for(let i1 = 0; i1 < prefix.length; ++i1){
+        const v = prefix.charCodeAt(i1);
+        chk = polymodStep(chk) ^ v & 31;
+    }
+    return chk;
+}
+function convert(data, inBits, outBits, pad) {
+    let value = 0;
+    let bits = 0;
+    const maxV = (1 << outBits) - 1;
+    const result = [];
+    for(let i = 0; i < data.length; ++i){
+        value = value << inBits | data[i];
+        bits += inBits;
+        while(bits >= outBits){
+            bits -= outBits;
+            result.push(value >> bits & maxV);
+        }
+    }
+    if (pad) {
+        if (bits > 0) result.push(value << outBits - bits & maxV);
+    } else {
+        if (bits >= inBits) return 'Excess padding';
+        if (value << outBits - bits & maxV) return 'Non-zero padding';
+    }
+    return result;
+}
+function toWords(bytes) {
+    return convert(bytes, 8, 5, true);
+}
+function fromWordsUnsafe(words) {
+    const res = convert(words, 5, 8, false);
+    if (Array.isArray(res)) return res;
+}
+function fromWords(words) {
+    const res = convert(words, 5, 8, false);
+    if (Array.isArray(res)) return res;
+    throw new Error(res);
+}
+function getLibraryFromEncoding(encoding) {
+    let ENCODING_CONST;
+    if (encoding === 'bech32') ENCODING_CONST = 1;
+    else ENCODING_CONST = 734539939;
+    function encode(prefix, words, LIMIT) {
+        LIMIT = LIMIT || 90;
+        if (prefix.length + 7 + words.length > LIMIT) throw new TypeError('Exceeds length limit');
+        prefix = prefix.toLowerCase();
+        // determine chk mod
+        let chk = prefixChk(prefix);
+        if (typeof chk === 'string') throw new Error(chk);
+        let result = prefix + '1';
+        for(let i = 0; i < words.length; ++i){
+            const x = words[i];
+            if (x >> 5 !== 0) throw new Error('Non 5-bit word');
+            chk = polymodStep(chk) ^ x;
+            result += ALPHABET.charAt(x);
+        }
+        for(let i2 = 0; i2 < 6; ++i2)chk = polymodStep(chk);
+        chk ^= ENCODING_CONST;
+        for(let i3 = 0; i3 < 6; ++i3){
+            const v = chk >> (5 - i3) * 5 & 31;
+            result += ALPHABET.charAt(v);
+        }
+        return result;
+    }
+    function __decode(str, LIMIT) {
+        LIMIT = LIMIT || 90;
+        if (str.length < 8) return str + ' too short';
+        if (str.length > LIMIT) return 'Exceeds length limit';
+        // don't allow mixed case
+        const lowered = str.toLowerCase();
+        const uppered = str.toUpperCase();
+        if (str !== lowered && str !== uppered) return 'Mixed-case string ' + str;
+        str = lowered;
+        const split = str.lastIndexOf('1');
+        if (split === -1) return 'No separator character for ' + str;
+        if (split === 0) return 'Missing prefix for ' + str;
+        const prefix = str.slice(0, split);
+        const wordChars = str.slice(split + 1);
+        if (wordChars.length < 6) return 'Data too short';
+        let chk = prefixChk(prefix);
+        if (typeof chk === 'string') return chk;
+        const words = [];
+        for(let i = 0; i < wordChars.length; ++i){
+            const c = wordChars.charAt(i);
+            const v = ALPHABET_MAP[c];
+            if (v === undefined) return 'Unknown character ' + c;
+            chk = polymodStep(chk) ^ v;
+            // not in the checksum?
+            if (i + 6 >= wordChars.length) continue;
+            words.push(v);
+        }
+        if (chk !== ENCODING_CONST) return 'Invalid checksum for ' + str;
+        return {
+            prefix,
+            words
+        };
+    }
+    function decodeUnsafe(str, LIMIT) {
+        const res = __decode(str, LIMIT);
+        if (typeof res === 'object') return res;
+    }
+    function decode(str, LIMIT) {
+        const res = __decode(str, LIMIT);
+        if (typeof res === 'object') return res;
+        throw new Error(res);
+    }
+    return {
+        decodeUnsafe,
+        decode,
+        encode,
+        toWords,
+        fromWordsUnsafe,
+        fromWords
+    };
+}
+exports.bech32 = getLibraryFromEncoding('bech32');
+exports.bech32m = getLibraryFromEncoding('bech32m');
+
+},{}],"dlxf7":[function(require,module,exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.hash = void 0;
+const js_sha512_1 = require("js-sha512");
+async function hash(data) {
+    return new Uint8Array(js_sha512_1.sha512_256.arrayBuffer(data));
+}
+exports.hash = hash;
+
+},{"js-sha512":"33W8e"}],"hWy4v":[function(require,module,exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.visitTransaction = exports.TransactionWrapper = exports.hashSignedTransaction = exports.signSignedTransaction = exports.openSignedTransaction = exports.TRANSACTION_ERR_UPGRADE_PENDING = exports.TRANSACTION_ERR_GAS_PRICE_TOO_LOW_CODE = exports.TRANSACTION_ERR_INSUFFICIENT_FEE_BALANCE_CODE = exports.TRANSACTION_ERR_INVALID_NONCE_CODE = exports.TRANSACTION_MODULE_NAME = exports.ERR_INVALID_ARGUMENT_CODE = exports.ERR_DUPLICATE_TX_CODE = exports.ERR_UNSUPPORTED_CODE = exports.ERR_VERSION_NOT_FOUND_CODE = exports.ERR_OVERSIZED_TX_CODE = exports.ERR_NO_COMMITTED_BLOCKS_CODE = exports.MODULE_NAME = exports.TENDERMINT_BACKEND_NAME = exports.GAS_OP_TX_BYTE = exports.FEATURE_FULL_NODE = exports.FEATURE_SERVICES = exports.TRANSACTION_SIGNATURE_CONTEXT = exports.HEIGHT_LATEST = void 0;
+const hash = require("./hash");
+const misc = require("./misc");
+const quantity = require("./quantity");
+const signature = require("./signature");
+/**
+ * HeightLatest is the height that represents the most recent block height.
+ */ exports.HEIGHT_LATEST = 0n;
+/**
+ * SignatureContext is the context used for signing transactions.
+ */ exports.TRANSACTION_SIGNATURE_CONTEXT = 'oasis-core/consensus: tx';
+/**
+ * FeatureServices indicates support for communicating with consensus services.
+ */ exports.FEATURE_SERVICES = 1;
+/**
+ * FeatureFullNode indicates that the consensus backend is independently fully verifying all
+ * consensus-layer blocks.
+ */ exports.FEATURE_FULL_NODE = 2;
+/**
+ * GasOpTxByte is the gas operation identifier for costing each transaction byte.
+ */ exports.GAS_OP_TX_BYTE = 'tx_byte';
+/**
+ * BackendName is the consensus backend name.
+ */ exports.TENDERMINT_BACKEND_NAME = 'tendermint';
+/**
+ * moduleName is the module name used for error definitions.
+ */ exports.MODULE_NAME = 'consensus';
+/**
+ * ErrNoCommittedBlocks is the error returned when there are no committed
+ * blocks and as such no state can be queried.
+ */ exports.ERR_NO_COMMITTED_BLOCKS_CODE = 1;
+/**
+ * ErrOversizedTx is the error returned when the given transaction is too big to be processed.
+ */ exports.ERR_OVERSIZED_TX_CODE = 2;
+/**
+ * ErrVersionNotFound is the error returned when the given version (height) cannot be found,
+ * possibly because it was pruned.
+ */ exports.ERR_VERSION_NOT_FOUND_CODE = 3;
+/**
+ * ErrUnsupported is the error returned when the given method is not supported by the consensus
+ * backend.
+ */ exports.ERR_UNSUPPORTED_CODE = 4;
+/**
+ * ErrDuplicateTx is the error returned when the transaction already exists in the mempool.
+ */ exports.ERR_DUPLICATE_TX_CODE = 5;
+/**
+ * ErrInvalidArgument is the error returned when the request contains an invalid argument.
+ */ exports.ERR_INVALID_ARGUMENT_CODE = 6;
+/**
+ * moduleName is the module name used for error definitions.
+ */ exports.TRANSACTION_MODULE_NAME = 'consensus/transaction';
+/**
+ * ErrInvalidNonce is the error returned when a nonce is invalid.
+ */ exports.TRANSACTION_ERR_INVALID_NONCE_CODE = 1;
+/**
+ * ErrInsufficientFeeBalance is the error returned when there is insufficient
+ * balance to pay consensus fees.
+ */ exports.TRANSACTION_ERR_INSUFFICIENT_FEE_BALANCE_CODE = 2;
+/**
+ * ErrGasPriceTooLow is the error returned when the gas price is too low.
+ */ exports.TRANSACTION_ERR_GAS_PRICE_TOO_LOW_CODE = 3;
+/**
+ * ErrUpgradePending is the error returned when an upgrade is pending and the transaction thus
+ * cannot be processed right now. The submitter should retry the transaction in this case.
+ */ exports.TRANSACTION_ERR_UPGRADE_PENDING = 4;
+async function openSignedTransaction(chainContext, signed) {
+    const context = signature.combineChainContext(exports.TRANSACTION_SIGNATURE_CONTEXT, chainContext);
+    return misc.fromCBOR(await signature.openSigned(context, signed));
+}
+exports.openSignedTransaction = openSignedTransaction;
+async function signSignedTransaction(signer, chainContext, transaction) {
+    const context = signature.combineChainContext(exports.TRANSACTION_SIGNATURE_CONTEXT, chainContext);
+    return await signature.signSigned(signer, context, misc.toCBOR(transaction));
+}
+exports.signSignedTransaction = signSignedTransaction;
+/**
+ * This special hex-hash-of-the-CBOR-encoded signed transaction is useful for interoperability
+ * with block explorers, so here's a special function for doing it.
+ */ async function hashSignedTransaction(signed) {
+    return misc.toHex(await hash.hash(misc.toCBOR(signed)));
+}
+exports.hashSignedTransaction = hashSignedTransaction;
+class TransactionWrapper {
+    constructor(method){
+        this.transaction = {
+            nonce: 0n,
+            fee: {
+                amount: quantity.fromBigInt(0n),
+                gas: 0n
+            },
+            method
+        };
+        this.signedTransaction = null;
+    }
+    setNonce(nonce) {
+        this.transaction.nonce = nonce;
+        return this;
+    }
+    setFeeAmount(amount) {
+        this.transaction.fee.amount = amount;
+        return this;
+    }
+    setFeeGas(gas) {
+        this.transaction.fee.gas = gas;
+        return this;
+    }
+    setBody(body) {
+        this.transaction.body = body;
+        return this;
+    }
+    async estimateGas(nic, signer) {
+        return await nic.consensusEstimateGas({
+            signer,
+            transaction: this.transaction
+        });
+    }
+    async sign(signer, chainContext) {
+        this.signedTransaction = await signSignedTransaction(signer, chainContext, this.transaction);
+    }
+    async hash() {
+        return await hashSignedTransaction(this.signedTransaction);
+    }
+    async submit(nic) {
+        await nic.consensusSubmitTx(this.signedTransaction);
+    }
+}
+exports.TransactionWrapper = TransactionWrapper;
+/**
+ * Calls one of the handlers based on the given transaction method.
+ * @param handlers Handlers, use an intersection of other modules'
+ * `ConsensusTransactionHandlers` types to initialize the fields.
+ * @param tx The transaction
+ * @returns `true` if the transaction method matched one of the handlers
+ */ function visitTransaction(handlers, tx) {
+    if (handlers[tx.method]) {
+        handlers[tx.method](tx.body);
+        return true;
+    }
+    return false;
+}
+exports.visitTransaction = visitTransaction;
+
+},{"./hash":"dlxf7","./misc":"ewPiH","./quantity":"foiUp","./signature":"fGvo7"}],"foiUp":[function(require,module,exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.fromBigInt = exports.toBigInt = void 0;
+const misc = require("./misc");
+function toBigInt(q) {
+    if (q.length === 0) return 0n;
+    return BigInt('0x' + misc.toHex(q));
+}
+exports.toBigInt = toBigInt;
+function fromBigInt(bi) {
+    if (bi === 0n) return new Uint8Array();
+    let hex = bi.toString(16);
+    if (hex.length % 2) hex = '0' + hex;
+    return misc.fromHex(hex);
+}
+exports.fromBigInt = fromBigInt;
+
+},{"./misc":"ewPiH"}],"fGvo7":[function(require,module,exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.visitMessage = exports.NaclSigner = exports.BlindContextSigner = exports.signMultiSigned = exports.openMultiSigned = exports.signSigned = exports.openSigned = exports.verify = exports.prepareSignerMessage = exports.combineChainContext = exports.CHAIN_CONTEXT_SEPARATOR = void 0;
+const nacl = require("tweetnacl");
+const hash = require("./hash");
+const misc = require("./misc");
+exports.CHAIN_CONTEXT_SEPARATOR = ' for chain ';
+function combineChainContext(context, chainContext) {
+    return `${context}${exports.CHAIN_CONTEXT_SEPARATOR}${chainContext}`;
+}
+exports.combineChainContext = combineChainContext;
+async function prepareSignerMessage(context, message) {
+    return await hash.hash(misc.concat(misc.fromString(context), message));
+}
+exports.prepareSignerMessage = prepareSignerMessage;
+async function verify(publicKey, context, message, signature) {
+    const signerMessage = await prepareSignerMessage(context, message);
+    const sigOk = nacl.sign.detached.verify(signerMessage, signature, publicKey);
+    return sigOk;
+}
+exports.verify = verify;
+async function openSigned(context, signed) {
+    const sigOk = await verify(signed.signature.public_key, context, signed.untrusted_raw_value, signed.signature.signature);
+    if (!sigOk) throw new Error('signature verification failed');
+    return signed.untrusted_raw_value;
+}
+exports.openSigned = openSigned;
+async function signSigned(signer, context, rawValue) {
+    return {
+        untrusted_raw_value: rawValue,
+        signature: {
+            public_key: signer.public(),
+            signature: await signer.sign(context, rawValue)
+        }
+    };
+}
+exports.signSigned = signSigned;
+async function openMultiSigned(context, multiSigned) {
+    const signerMessage = await prepareSignerMessage(context, multiSigned.untrusted_raw_value);
+    for (const signature of multiSigned.signatures){
+        const sigOk = nacl.sign.detached.verify(signerMessage, signature.signature, signature.public_key);
+        if (!sigOk) throw new Error('signature verification failed');
+    }
+    return multiSigned.untrusted_raw_value;
+}
+exports.openMultiSigned = openMultiSigned;
+async function signMultiSigned(signers, context, rawValue) {
+    const signatures = [];
+    for (const signer of signers)signatures.push({
+        public_key: signer.public(),
+        signature: await signer.sign(context, rawValue)
+    });
+    return {
+        untrusted_raw_value: rawValue,
+        signatures: signatures
+    };
+}
+exports.signMultiSigned = signMultiSigned;
+class BlindContextSigner {
+    constructor(signer){
+        this.signer = signer;
+    }
+    public() {
+        return this.signer.public();
+    }
+    async sign(context, message) {
+        const signerMessage = await prepareSignerMessage(context, message);
+        return await this.signer.sign(signerMessage);
+    }
+}
+exports.BlindContextSigner = BlindContextSigner;
+/**
+ * An in-memory signer based on tweetnacl. We've included this for development.
+ */ class NaclSigner {
+    constructor(key, note){
+        if (note !== 'this key is not important') throw new Error('insecure signer implementation');
+        this.key = key;
+    }
+    /**
+     * Generate a keypair from a random seed
+     * @param note Set to 'this key is not important' to acknowledge the risks
+     * @returns Instance of NaclSigner
+     */ static fromRandom(note) {
+        const secret = new Uint8Array(32);
+        crypto.getRandomValues(secret);
+        return NaclSigner.fromSeed(secret, note);
+    }
+    /**
+     * Instanciate from a given secret
+     * @param secret 64 bytes ed25519 secret (h) that will be used to sign messages
+     * @param note Set to 'this key is not important' to acknowledge the risks
+     * @returns Instance of NaclSigner
+     */ static fromSecret(secret, note) {
+        const key = nacl.sign.keyPair.fromSecretKey(secret);
+        return new NaclSigner(key, note);
+    }
+    /**
+     * Instanciate from a given seed
+     * @param seed 32 bytes ed25519 seed (k) that will deterministically generate a private key
+     * @param note Set to 'this key is not important' to acknowledge the risks
+     * @returns Instance of NaclSigner
+     */ static fromSeed(seed, note) {
+        const key = nacl.sign.keyPair.fromSeed(seed);
+        return new NaclSigner(key, note);
+    }
+    /**
+     * Returns the 32 bytes public key of this key pair
+     * @returns Public key
+     */ public() {
+        return this.key.publicKey;
+    }
+    /**
+     * Signs the given message
+     * @param message Bytes to sign
+     * @returns Signed message
+     */ async sign(message) {
+        return nacl.sign.detached(message, this.key.secretKey);
+    }
+}
+exports.NaclSigner = NaclSigner;
+/**
+ * Calls one of the handlers based on the given context.
+ * @param handlers Handlers, use an intersection of other modules'
+ * `SignatureMessageHandlers*` types to initialize the fields.
+ * @param context The context string as would be given to `ContextSigner.sign`
+ * @param message The messsage as would be given to `ContextSigner.sign`
+ * @returns `true` if the context matched one of the handlers
+ */ function visitMessage(handlers, context, message) {
+    // This doesn't support dynamic suffixes.
+    {
+        const parts = context.split(exports.CHAIN_CONTEXT_SEPARATOR);
+        if (parts.length === 2) {
+            const [context2, chainContext] = parts;
+            if (handlers.withChainContext?.[context2]) {
+                handlers.withChainContext[context2](chainContext, misc.fromCBOR(message));
+                return true;
+            }
+            return false;
+        }
+    }
+    if (handlers.bare?.[context]) {
+        handlers.bare[context](misc.fromCBOR(message));
+        return true;
+    }
+    return false;
+}
+exports.visitMessage = visitMessage;
+
+},{"tweetnacl":"eaLKT","./hash":"dlxf7","./misc":"ewPiH"}]},["9Cyuk"], "9Cyuk", "parcelRequire94c2")
 
 </script>
   </body>
