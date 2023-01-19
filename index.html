@@ -2,14 +2,14 @@
 <html lang="en">
   <head>
     <meta http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'sha256-P7OUnk8jsjqTcARLgVX28Fg2IiD+wZRgzH/MP95xGEo='; style-src 'sha256-maWESYSmK8qXeUqmlwu/2s+/3vbwgQEcs5QtZhemXd0=';">
+      content="default-src 'none'; script-src 'sha256-hrdmNp93wofQc2YAMCkd7oqQFLiVkNV8kpfYr2sdSLU='; style-src 'sha256-maWESYSmK8qXeUqmlwu/2s+/3vbwgQEcs5QtZhemXd0=';">
     <style>
       body { font-family: sans-serif; }
       textarea { max-width: 100%; }
     </style>
   </head>
   <body>
-    <h2>Unledger: mnemonic to private keys</h2>
+    <h2>Unmnemonic: mnemonic to private keys</h2>
 
 
     To slightly increase security:
@@ -50,14 +50,12 @@
 
     <hr>
     <p>
-      <a href="https://github.com/lukaw3d/unledger">Source code</a>
-    </p>
-    <p>
-      See also: <a href="https://github.com/oasisprotocol/tools/tree/f4e25688b5a85abb2ed9fb04025906135f3dee8a/unledger">unledger version written in Go</a>
+      <a href="https://github.com/lukaw3d/unmnemonic">Source code</a>
     </p>
 
     <script type="module">
-      const { getPrivateKeys } = require('./getPrivateKeys.js')
+      const { getLedgerPrivateKeys } = require('./getLedgerPrivateKeys.js')
+      const { getAdr8PrivateKeys } = require('./getAdr8PrivateKeys.js')
       window.form.addEventListener('submit', event => {
         try {
           event.preventDefault()
@@ -65,8 +63,15 @@
             .trim()
             .replace(/\n/g, ' ')
             .replace(/ +/g, ' ')
-          const privateKeys = getPrivateKeys(mnemonic)
-          window.out.textContent = `Private keys:\n${privateKeys.join('\n')}`
+
+          getAdr8PrivateKeys(mnemonic).then((adr8PrivateKeys) => {
+            const ledgerPrivateKeys = getLedgerPrivateKeys(mnemonic)
+            window.out.textContent =
+              `Private keys using ADR 0008 derivation:\n${adr8PrivateKeys.join('\n')}\n\n` +
+              `Private keys using Ledger derivation:\n${ledgerPrivateKeys.join('\n')}\n\n`
+          }).catch((err) => {
+            window.out.textContent = err
+          })
         } catch (err) {
           window.out.textContent = err
         }

@@ -1,7 +1,7 @@
 // @ts-check
 const { hdKeyDerivation } = require('@zondax/ledger-substrate/src/index')
 
-function getPrivateKeys(mnemonic) {
+function getLedgerPrivateKeys(mnemonic) {
   return new Array(20).fill(0).map((_, ix) => {
     const params = {
       mnemonic: mnemonic,
@@ -17,4 +17,4 @@ function getPrivateKeys(mnemonic) {
   })
 }
 
-module.exports = { getPrivateKeys }
+module.exports = { getLedgerPrivateKeys }

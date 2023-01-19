@@ -5,6 +5,7 @@
     "test": "node test.js"
   },
   "dependencies": {
+    "@oasisprotocol/client": "^0.1.1-alpha.2",
     "@zondax/ledger-substrate": "^0.24.0"
   },
   "devDependencies": {
