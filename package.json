@@ -1,6 +1,5 @@
 {
   "scripts": {
-    "start": "parcel serve --no-hmr index.html",
     "build": "rm -rf docs && parcel build --no-optimize --no-scope-hoist --no-source-maps --public-url /oasis-unmnemonic --dist-dir docs index.html",
     "test": "node test.js"
   },
@@ -10,7 +9,7 @@
   },
   "devDependencies": {
     "buffer": "^6.0.3",
-    "parcel": "^2.3.2",
+    "parcel": "^2.11.0",
     "process": "^0.11.10",
     "stream-browserify": "^3.0.0"
   }
